@@ -1,6 +1,10 @@
 from stockex import stockwrapper as sw
 import pandas as pd
 import numpy as np
+import os
+import time
+
+DATADIR = 'data'
 
 class stockDataManager(object):
 	"""docstring for stockDataManager"""
@@ -27,17 +31,38 @@ class stockDataManager(object):
 
 
 	def fetchAllStockDataFromYQL(self,startDate,endDate):
+		print('Start fetching Stock data from '+startDate + " to "+endDate)
 		dateRange = pd.date_range(startDate,endDate)
+		dateRangeInStrings = dateRange.map(lambda x: x.strftime('%Y-%m-%d'))
 		stockList = self.loadStockList()
-		df = pd.DataFrame(np.zeros(len(stockList)*len(dateRange)).reshape((-1,len(stockList))),index=dateRange, columns=[stockList])
-		dateRangeInString = dateRange.map(lambda x: x.strftime('%Y-%m-%d'))
-		print(dateRangeInString)
-		#print(df)
-		#for stock in self.loadStockList:
-		#	historicals = self.getStockHistoricalData(stock,startDate,endDate)
+		df = pd.DataFrame(np.zeros(len(stockList)*len(dateRange)).reshape((-1,len(stockList))),index=dateRangeInStrings, columns=[stockList])
+		stockList = self.loadStockList()
+		for i in range(len(stockList)):
+			stock =stockList[i]
+			print("processingStock: " +stock + " with index of "+ str(i))
+			try:
+				historicals = self.getStockHistoricalData(stock, startDate, endDate)
+			except:
+				print("[Error]---->Stock "+stock+" doesn't have values in the time peroid")
+				continue
+			for dayHistory in historicals:
+				dateStr =dayHistory['Date']
+				closePrice = dayHistory['Close']
+				df[stock][dateStr] = closePrice
+			# for each ip 2000 querys perhour. not enough for our use case, so sleep for every call.
+			time.sleep(1.5)
+		file_name = DATADIR+"/[Close]"+startDate+"|"+endDate+".csv"
+		df.to_csv(file_name)
+		return df
 
-
-		pass
+	def loadData(self,startDate,endDate):
+		fileName = DATADIR+"/[Close]"+startDate+"|"+endDate+".csv"
+		if os.path.exists(fileName):
+			df = pd.read_csv(fileName)
+		else:
+			df = self.fetchAllStockDataFromYQL(startDate,endDate)
+		dataMatrix = df.as_matrix()
+		return dataMatrix
 
 
 
@@ -47,7 +72,12 @@ class stockDataManager(object):
 
 if __name__ == "__main__":
 	sm = stockDataManager()
-	sm.fetchAllStockDataFromYQL('2013-01-01','2013-01-03')
+	#result = sm.getStockHistoricalData("PIH",'2015-01-01','2015-10-03')
+	#print(result)
+	#sm.fetchAllStockDataFromYQL('2015-02-01','2015-02-10')
+
+	sm.loadData('2015-01-01','2015-12-31')
+
 	#result = sm.getStockHistoricalData("EBAY",'2013-01-01','2013-01-03')
 	#print(result[0]["Date"])
 	#data = sm.getStockHistoricalData('EBAY')
