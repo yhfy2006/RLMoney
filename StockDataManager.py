@@ -72,15 +72,10 @@ class stockDataManager(object):
 
 if __name__ == "__main__":
 	sm = stockDataManager()
-	#result = sm.getStockHistoricalData("PIH",'2015-01-01','2015-10-03')
-	#print(result)
-	#sm.fetchAllStockDataFromYQL('2015-02-01','2015-02-10')
+	df = pd.read_csv('data/[Close]2015-01-01|2015-12-31.csv',header=None)
+	df = df.iloc[1:,1:].astype(float)
+	a = df.loc[~df.apply(lambda row: (row==0).all(), axis=1)]
+	for column_name,column in a.transpose().iterrows():
+		print (column.values)
 
-	sm.loadData('2015-01-01','2015-12-31')
 
-	#result = sm.getStockHistoricalData("EBAY",'2013-01-01','2013-01-03')
-	#print(result[0]["Date"])
-	#data = sm.getStockHistoricalData('EBAY')
-    # for item in data:
-    # 	print(item['Date'] + '\t' + item['Close'])
-    #sm.loadStockList()
