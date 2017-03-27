@@ -17,11 +17,13 @@ class DeepQNetwork:
             e_greedy=0.9,
             replace_target_iter=500,
             memory_size=500,
-            batch_size=32,
-            rnn_train_length = 30,
+            batch_size=60,
+            rnn_train_length = 20,
             e_greedy_increment=None,
+            batchSize = 250,
             output_graph=False,
     ):
+        self.batch_size = batch_size
         self.n_actions = n_actions
         self.n_features = n_features
         self.lr = learning_rate
@@ -49,9 +51,19 @@ class DeepQNetwork:
         value = np.random.random(shape)
         return K.variable(value, name=name)
 
+    def build_train_data(self):
+        # sample batch memory from all memory
+        batch_memory = self.memory.sample(self.batch_size) if self.memory_counter > self.memory_size else self.memory.iloc[:self.memory_counter].sample(self.batch_size, replace=True)
+
+
     def _build_keras_net(self):
         model = Sequential()
-        model.add(LSTM(30, input_dim=1))
+        model.add(LSTM(50,
+                       input_shape=(self.rnn_train_length, self.n_features),
+                       batch_size=self.rnn_train_length,
+                       return_sequences=True,
+                       stateful=True))
+        #model.add(LSTM(30, input_dim=1))
         # model.add(Dropout(0.5))
         # model.add(LSTM(30, batch_input_shape=(20,3,1),stateful=True))
         # model.add(Dropout(0.4))
@@ -126,7 +138,6 @@ class DeepQNetwork:
         # train eval network
         history = self.evaluate_net.fit(self.s,q_target,
                 nb_epoch=1,
-                batch_size=50,
                 shuffle=False,
                 verbose=0)
 

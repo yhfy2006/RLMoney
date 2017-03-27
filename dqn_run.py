@@ -30,26 +30,20 @@ def run_network():
             step += 1
 
 
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    env = Game(250, 100, 5, 0.3)
 
+    gameSize = 250
+
+    env = Game(gameSize, 100, 5, 0.3)
     n_actions = 3
     n_features =4
+
     RL = DeepQNetwork(n_actions, n_features,
                       learning_rate=0.03,
                       reward_decay=0.7,
                       e_greedy=0.9,
                       replace_target_iter=200,
-                      memory_size=2000,
-                      e_greedy_increment = 0.001
-                      # output_graph=True
+                      memory_size=20,
+                      e_greedy_increment = 0.001,
                       )
     run_network()
