@@ -31,7 +31,6 @@ class DeepQNetwork:
         self.epsilon_max = e_greedy
         self.replace_target_iter = replace_target_iter
         self.memory_size = memory_size
-        self.batch_size = batch_size
         self.rnn_train_length = rnn_train_length
         self.epsilon_increment = e_greedy_increment
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
@@ -53,35 +52,25 @@ class DeepQNetwork:
 
     def build_train_data(self):
         # sample batch memory from all memory
-        batch_memory = self.memory.sample(self.batch_size) if self.memory_counter > self.memory_size else self.memory.iloc[:self.memory_counter].sample(self.batch_size, replace=True)
-
+        X = np.ndarray(shape=(self.batch_size, self.rnn_train_length,self.n_features), dtype=float)
+        for i in range(self.batch_size):
+            X[i] = self.memory.iloc[i:i+self.rnn_train_length,:self.n_features].values
+        s = self.memory.iloc[self.rnn_train_length -1:,:self.n_features].values
+        s_ = self.memory.iloc[self.rnn_train_length -1:,-self.n_features:].values
+        return X,s,s_
 
     def _build_keras_net(self):
         model = Sequential()
         model.add(LSTM(50,
-                       input_shape=(self.rnn_train_length, self.n_features),
-                       batch_size=self.rnn_train_length,
-                       return_sequences=True,
-                       stateful=True))
+                       input_shape=(self.rnn_train_length, self.n_features)))
         #model.add(LSTM(30, input_dim=1))
         # model.add(Dropout(0.5))
         # model.add(LSTM(30, batch_input_shape=(20,3,1),stateful=True))
         # model.add(Dropout(0.4))
-        # model.add(Dense(self.n_actions,init="normal"))
+        model.add(Dense(self.n_actions,init="normal"))
         model.compile(optimizer='adam', loss='mse',metrics=['accuracy'])
         print(model.summary())
         return model
-
-        # input = Input(shape=(20,self.n_features))
-        # x = LSTM(128, batch_input_shape=(20,self.rnn_train_length, self.n_features),stateful=True,return_sequences=True)(input)
-        # x = Dropout(0.5)(x)
-        # x = LSTM(128, batch_input_shape=(20,self.rnn_train_length, self.n_features),stateful=True)(x)
-        # x = Dropout(0.4)(x)
-        # output = Dense(self.n_actions,init='normal')(x)
-        # md = Model(input = input, output=output)
-        # md.compile(optimizer='adam', loss='mse',metrics=['accuracy'])
-        # print(md.summary())
-        # return md
 
     def _build_net(self):
         # ------------------ build evaluate_net ------------------
@@ -120,20 +109,20 @@ class DeepQNetwork:
             self._replace_target_params()
             print('\ntarget_params_replaced\n')
 
-        # sample batch memory from all memory
-        batch_memory = self.memory.sample(self.batch_size) \
-            if self.memory_counter > self.memory_size \
-            else self.memory.iloc[:self.memory_counter].sample(self.batch_size, replace=True)
+        X,s,s_ = self.build_train_data()
 
-        self.s = batch_memory.iloc[:, :self.n_features].values
-        self.s_ = batch_memory.iloc[:, -self.n_features:].values
-
-        q_next = self.target_net.predict(self.s_)
-        q_eval = self.evaluate_net.predict(self.s)
+        #
+        #当前状态的input序列在memory里，那下一个状态的input序列在哪里
+        q_next = self.target_net.predict(s_)
+        q_eval = self.evaluate_net.predict(s)
 
         q_target = q_eval.copy()
-        q_target[np.arange(self.batch_size, dtype=np.int32), batch_memory.iloc[:, self.n_features].astype(int)] = \
-            batch_memory.iloc[:, self.n_features+1] + self.gamma * np.max(q_next, axis=1)
+
+        batch_index = np.arange(self.batch_size, dtype=np.int32)
+        eval_act_index = self.memory[:, self.n_features].astype(int)
+        reward = self.memory[:, self.n_features + 1]
+
+        q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
 
         # train eval network
         history = self.evaluate_net.fit(self.s,q_target,
