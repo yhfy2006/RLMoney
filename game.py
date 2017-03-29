@@ -60,7 +60,13 @@ class Game(object):
         for i in range(self.game_length):
             record = raw_data[i + start + 1]
             pre_close = float(raw_data[i + start]['Adj_Close'])  # previous adjusted close
-            adjust = float(record['Adj_Close']) / float(record['Close'])
+
+            #这里会出错
+            try:
+                adjust = float(record['Adj_Close']) / float(record['Close'])
+            except:
+                continue
+
             raw_prices = np.array([float(record['Open']),
                                    float(record['High']),
                                    float(record['Low']),
