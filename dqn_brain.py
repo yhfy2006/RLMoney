@@ -61,6 +61,7 @@ class DeepQNetwork:
 
     def _build_keras_net(self):
         model = Sequential()
+        #先只搭个一层试试看
         model.add(LSTM(50,
                        input_shape=(self.rnn_train_length, self.n_features)))
         #model.add(LSTM(30, input_dim=1))
