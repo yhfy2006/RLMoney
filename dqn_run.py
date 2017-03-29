@@ -2,6 +2,8 @@ __author__ = 'chhe'
 
 from game import Game
 from dqn_brain import DeepQNetwork
+import matplotlib.pyplot as plt
+
 
 
 def run_network():
@@ -11,9 +13,10 @@ def run_network():
         gameRun += 1
         observation = env.reset()
 
+        gameCicle = 0
         while True:
             step += 1
-
+            gameCicle += 1
             action = RL.choose_action(observation)
 
             observation_,reward,done,info = env.step(action)
@@ -22,10 +25,15 @@ def run_network():
 
             if step % memory_size == 0:
                 RL.learn()
-
             observation = observation_
 
+            # plt.axis([0, gameSize, 0, 10000])
+            # plt.scatter(gameSize, env.cash)
+            # plt.pause(0.05)
+            #plt.plot(x, y1, color='red', linewidth=1.0, linestyle='--')
+
             if done:
+                print(str(env.cash)+" game:"+str(gameRun)+" used steps:"+str(gameCicle))
                 RL.memory_counter = 0
                 break
 
@@ -36,7 +44,7 @@ if __name__ == "__main__":
 
     gameSize = 250
 
-    env = Game(gameSize, 100, 5, 0.3)
+    env = Game(gameSize, 10000, 50, 0.3)
     n_actions = 3
     n_features =4
 
@@ -52,6 +60,7 @@ if __name__ == "__main__":
                       memory_size=memory_size,
                       e_greedy_increment = 0.001,
                       rnn_train_length = rnn_train_length,
-                      batch_size = train_batch_size
+                      batch_size = train_batch_size,
+                      load_weight=False
                       )
     run_network()

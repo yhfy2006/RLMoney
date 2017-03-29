@@ -18,9 +18,11 @@ class DeepQNetwork:
             batch_size=60,
             rnn_train_length = 20,
             e_greedy_increment=None,
+            load_weight = False,
             batchSize = 250,
             output_graph=False,
     ):
+        self.load_weight =load_weight
         self.batch_size = batch_size
         self.n_actions = n_actions
         self.n_features = n_features
@@ -77,6 +79,9 @@ class DeepQNetwork:
         # ------------------ build evaluate_net ------------------
         self.evaluate_net = self._build_keras_net()
         self.target_net = self._build_keras_net()
+        if self.load_weight:
+            self.evaluate_net.load_weights("learn_Weights.h5")
+            self.target_net.load_weights("learn_Weights.h5")
 
 
     def store_transition(self, s, a, r, s_):
@@ -96,15 +101,15 @@ class DeepQNetwork:
             # forward feed the observation and get q value for every actions
             x = self.memory.iloc[-self.rnn_train_length:, :self.n_features].values
             x = x.reshape(1, self.rnn_train_length, self.n_features)
-            actions_value =  self.evaluate_net.predict(x)
+            actions_value = self.evaluate_net.predict(x)
             action = np.argmax(actions_value)
         else:
             action = np.random.randint(0, self.n_actions)
         return action
 
     def _replace_target_params(self):
-        self.evaluate_net.save_weights("tempWeights.h5")
-        self.target_net.load_weights("tempWeights.h5")
+        self.evaluate_net.save_weights("learn_Weights.h5")
+        self.target_net.load_weights("learn_Weights.h5")
 
     def learn(self):
         # check to replace target parameters
