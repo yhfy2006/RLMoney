@@ -136,7 +136,6 @@ class DeepQNetwork:
 
         # increasing epsilon
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
-        #print(self.epsilon)
         self.learn_step_counter += 1
 
 
