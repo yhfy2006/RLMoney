@@ -26,6 +26,7 @@ def run_network():
             observation = observation_
 
             if done:
+                RL.memory_counter = 0
                 break
 
 

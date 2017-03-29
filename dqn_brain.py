@@ -1,10 +1,8 @@
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Input, Dense, LSTM, Dropout
-from keras.models import Model
 from keras import backend as K
 
 class DeepQNetwork:
@@ -53,11 +51,13 @@ class DeepQNetwork:
     def build_train_data(self):
         # sample batch memory from all memory
         X = np.ndarray(shape=(self.batch_size, self.rnn_train_length,self.n_features), dtype=float)
+        X_ = np.ndarray(shape=(self.batch_size, self.rnn_train_length, self.n_features), dtype=float)
         for i in range(self.batch_size):
             X[i] = self.memory.iloc[i:i+self.rnn_train_length,:self.n_features].values
+            X_[i] = self.memory.iloc[i:i+self.rnn_train_length,-self.n_features:].values
         s = self.memory.iloc[self.rnn_train_length -1:,:self.n_features].values
         s_ = self.memory.iloc[self.rnn_train_length -1:,-self.n_features:].values
-        return X,s,s_
+        return X,X_,s,s_
 
     def _build_keras_net(self):
         model = Sequential()
@@ -91,9 +91,11 @@ class DeepQNetwork:
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() < self.epsilon and self.memory_counter >= self.rnn_train_length:
             # forward feed the observation and get q value for every actions
-            actions_value =  self.evaluate_net.predict(observation)
+            x = self.memory.iloc[-self.rnn_train_length:, :self.n_features].values
+            x = x.reshape(1, self.rnn_train_length, self.n_features)
+            actions_value =  self.evaluate_net.predict(x)
             action = np.argmax(actions_value)
         else:
             action = np.random.randint(0, self.n_actions)
@@ -109,23 +111,23 @@ class DeepQNetwork:
             self._replace_target_params()
             print('\ntarget_params_replaced\n')
 
-        X,s,s_ = self.build_train_data()
+        X,X_,s,s_ = self.build_train_data()
 
         #
         #当前状态的input序列在memory里，那下一个状态的input序列在哪里
-        q_next = self.target_net.predict(s_)
-        q_eval = self.evaluate_net.predict(s)
+        q_next = self.target_net.predict(X_)
+        q_eval = self.evaluate_net.predict(X)
 
         q_target = q_eval.copy()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-        eval_act_index = self.memory[:, self.n_features].astype(int)
-        reward = self.memory[:, self.n_features + 1]
+        eval_act_index = self.memory.values[self.rnn_train_length-1:, self.n_features].astype(int)
+        reward = self.memory.values[self.rnn_train_length-1:, self.n_features + 1]
 
         q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
 
         # train eval network
-        history = self.evaluate_net.fit(self.s,q_target,
+        history = self.evaluate_net.fit(X,q_target,
                 nb_epoch=1,
                 shuffle=False,
                 verbose=0)
