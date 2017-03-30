@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 def run_network():
     step = 0
     gameRun = 0
+    fund_sum = 0.0
+
     for episode in range(500000):
         gameRun += 1
         observation = env.reset()
@@ -33,9 +35,21 @@ def run_network():
             #plt.plot(x, y1, color='red', linewidth=1.0, linestyle='--')
 
             if done:
-                print(str(env.cash)+" game:"+str(gameRun)+" used steps:"+str(gameCicle))
+                fund_sum+=env.cash
+                avg =fund_sum / gameRun
+
+
+                logStr = str(env.cash)+" game:"+str(gameRun)+" used steps:"+str(gameCicle) + "fund avg:"+ str(avg)
+
+                with open('log.txt', 'a') as file:
+                    file.write(logStr)
+                    file.write('\n')
+
+                print(logStr)
+
                 RL.memory_counter = 0
                 break
+
 
 
 
