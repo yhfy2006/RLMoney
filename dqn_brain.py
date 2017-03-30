@@ -63,10 +63,10 @@ class DeepQNetwork:
 
     def _build_keras_net(self):
         model = Sequential()
-        model.add(LSTM(50,
+        model.add(LSTM(512,
                        input_shape=(self.rnn_train_length, self.n_features),return_sequences=True))
         model.add(Dropout(0.5))
-        model.add(LSTM(30, input_shape=(self.rnn_train_length, self.n_features)))
+        model.add(LSTM(512, input_shape=(self.rnn_train_length, self.n_features)))
         model.add(Dropout(0.4))
         model.add(Dense(self.n_actions,init="normal"))
         model.compile(optimizer='adam', loss='mse',metrics=['accuracy'])
