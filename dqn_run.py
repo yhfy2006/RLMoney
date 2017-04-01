@@ -35,14 +35,18 @@ def run_network():
             #plt.plot(x, y1, color='red', linewidth=1.0, linestyle='--')
 
             if done:
-                fund_sum+=env.cash
+                fund_sum+=env.net_values[-1]
                 avg =fund_sum / gameRun
 
 
-                logStr = str(env.cash)+" game:"+str(gameRun)+" used steps:"+str(gameCicle) + "fund avg:"+ str(avg)
+                logStr = "netValue:"+str(env.net_values[-1]) + " cash:"+str(env.cash)+" game:"+str(gameRun)+" used_steps:"+str(gameCicle) + " fund_avg(netValue):"+ str(avg)
 
                 with open('log.txt', 'a') as file:
                     file.write(logStr)
+                    file.write('\n')
+
+                with open('netValue.txt', 'a') as file:
+                    file.write(str(env.net_values[-1]))
                     file.write('\n')
 
                 print(logStr)
