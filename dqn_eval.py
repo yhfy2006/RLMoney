@@ -2,6 +2,7 @@
 import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
+import time
 
 
 class Evaluator(object):
@@ -87,6 +88,7 @@ class Evaluator(object):
 
 
     def load_from_data(self):
+        self._clear_data()
         temp_write_to_file = self.write_to_file
         self.write_to_file = False
         with open(self.data_file) as fp:
@@ -105,17 +107,7 @@ class Evaluator(object):
 if __name__ == '__main__':
 
     eval = Evaluator()
-
-    with open('netValue.txt') as fp:
-        logLines = 0
-        x = []
-        for line in fp:
-            logLines += 1
-            x.append(logLines)
-            net_value = float(line)
-            eval.update(net_value,0,0,0)
-
-    #splt.plot(eval.overall_avg())
-    plt.plot(eval.deque_avg())
-    plt.show()
-   # print(eval.deque_avg())
+    while(True):
+        eval.load_from_data()
+        print(eval.overall_avg()[-1])
+        time.sleep(6)
