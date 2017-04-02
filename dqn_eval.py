@@ -3,6 +3,7 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 import time
+import sys, getopt
 
 
 class Evaluator(object):
@@ -102,12 +103,61 @@ class Evaluator(object):
 
         self.write_to_file = temp_write_to_file
 
+    def plot(self,data):
+        plt.plot(data)
+        plt.show()
 
 
-if __name__ == '__main__':
-
+def print_d(option):
     eval = Evaluator()
     while(True):
         eval.load_from_data()
-        print(eval.overall_avg()[-1])
+        if option == 'ov_avg':
+            print(eval.overall_avg()[-1])
+        if option == 'dq_avg':
+            print(eval.deque_avg()[-1])
+        if option == 'exp_avg':
+            print(eval.exp_moving_avg()[-1])
         time.sleep(6)
+
+def plot_d(option):
+    eval = Evaluator()
+    if option == 'ov_avg':
+        eval.plot(eval.overall_avg())
+    if option == 'dq_avg':
+        eval.plot(eval.deque_avg())
+    if option == 'exp_avg':
+        eval.plot(eval.exp_moving_avg())
+
+
+
+def main(argv):
+   try:
+      opts, args = getopt.getopt(argv,"r:l",["ov_avg","dq_avg","exp_avg"])
+   except getopt.GetoptError:
+      print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg')
+      sys.exit(2)
+
+   for opt, arg in opts:
+      if opt == '-h':
+         print ('dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg')
+         print ('ov_avg = overall_ avg')
+         print ('dq_avg = deque_ avg')
+         print ('exp_avg = exp_moving_avg')
+         sys.exit()
+      elif opt in ("-r", "ov_avg"):
+         print_d('ov_avg')
+      elif opt in ("-r", "dq_avg"):
+         print_d('dq_avg')
+      elif opt in ("-r", "exp_avg"):
+         print_d('exp_avg')
+
+      elif opt in ("-l", "ov_avg"):
+         plot_d('ov_avg')
+      elif opt in ("-l", "dq_avg"):
+         plot_d('dq_avg')
+      elif opt in ("-l", "exp_avg"):
+         plot_d('exp_avg')
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
