@@ -3,8 +3,6 @@ __author__ = 'chhe'
 from game import Game
 from dqn_brain import DeepQNetwork
 from dqn_eval import Evaluator
-import matplotlib.pyplot as plt
-
 
 
 def run_network():
