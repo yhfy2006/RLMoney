@@ -4,6 +4,7 @@ from collections import deque
 import matplotlib.pyplot as plt
 import time
 import sys, getopt
+import statistics
 
 
 class Evaluator(object):
@@ -45,6 +46,16 @@ class Evaluator(object):
             avg = sum(self.q_netValue)/float(len(self.q_netValue))
             result.append(avg)
         return result
+
+    def deque_mid(self):
+        self.q_netValue.clear()
+        result = []
+        for i in self.net_values_list:
+            self.q_netValue.append(i)
+            avg = statistics.median(self.q_netValue)
+            result.append(avg)
+        return result
+
 
     def exp_moving_avg(self):
         que_sum = 0
@@ -108,6 +119,8 @@ def print_d(option):
             print(eval.deque_avg()[-1])
         if option == 'exp_avg':
             print(eval.exp_moving_avg()[-1])
+        if option == 'dq_mid':
+            print(eval.deque_mid()[-1])
         time.sleep(6)
 
 def plot_d(option):
@@ -119,22 +132,25 @@ def plot_d(option):
         eval.plot(eval.deque_avg())
     if option == 'exp_avg':
         eval.plot(eval.exp_moving_avg())
+    if option == 'dq_mid':
+        eval.plot(eval.deque_mid())
 
 
 
 def main(argv):
    try:
-      opts, args = getopt.getopt(argv,"r:l:",["ov_avg","dq_avg","exp_avg"])
+      opts, args = getopt.getopt(argv,"r:l:",["ov_avg","dq_avg","dq_mid","exp_avg"])
    except getopt.GetoptError:
-      print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg')
+      print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg|dq_mid')
       sys.exit(2)
 
    for opt, arg in opts:
       if opt == '-h':
-         print ('dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg')
+         print ('dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg|dq_mid')
          print ('ov_avg = overall_ avg')
          print ('dq_avg = deque_ avg')
          print ('exp_avg = exp_moving_avg')
+         print ('dq_mid = deque_median')
          sys.exit()
       if opt == '-r':
           if arg == 'ov_avg':
@@ -143,6 +159,8 @@ def main(argv):
               print_d('dq_avg')
           if arg == 'exp_avg':
               print_d('exp_avg')
+          if arg == 'dq_mid':
+              print_d('dq_mid')
 
       if opt == '-l':
           if arg == 'ov_avg':
@@ -151,6 +169,8 @@ def main(argv):
               plot_d('dq_avg')
           if arg == 'exp_avg':
               plot_d('exp_avg')
+          if arg == 'dq_mid':
+              plot_d('dq_mid')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
