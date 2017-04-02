@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from keras.models import Sequential
-from keras.layers import Input, Dense, LSTM, Dropout
+from keras.layers import Input, Dense, LSTM, Dropout,Activation
 from keras import backend as K
 
 class DeepQNetwork:
@@ -34,6 +34,7 @@ class DeepQNetwork:
         self.rnn_train_length = rnn_train_length
         self.epsilon_increment = e_greedy_increment
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
+        self.currentLoss = 0.0
 
         # total learning step
         self.learn_step_counter = 0
@@ -65,8 +66,10 @@ class DeepQNetwork:
         model = Sequential()
         model.add(LSTM(512,
                        input_shape=(self.rnn_train_length, self.n_features),return_sequences=True))
+        model.add((Activation('relu')))
         model.add(Dropout(0.5))
         model.add(LSTM(512, input_shape=(self.rnn_train_length, self.n_features)))
+        model.add((Activation('relu')))
         model.add(Dropout(0.4))
         model.add(Dense(self.n_actions,init="normal"))
         model.compile(optimizer='adam', loss='mse',metrics=['accuracy'])
@@ -136,7 +139,7 @@ class DeepQNetwork:
                 shuffle=False,
                 verbose=0)
 
-        self.cost_his.append(history.history['loss'])
+        self.currentLoss = history.history['loss']
 
         # increasing epsilon
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max

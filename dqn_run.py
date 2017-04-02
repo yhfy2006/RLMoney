@@ -2,6 +2,7 @@ __author__ = 'chhe'
 
 from game import Game
 from dqn_brain import DeepQNetwork
+from dqn_eval import Evaluator
 import matplotlib.pyplot as plt
 
 
@@ -9,7 +10,6 @@ import matplotlib.pyplot as plt
 def run_network():
     step = 0
     gameRun = 0
-    fund_sum = 0.0
 
     for episode in range(500000):
         gameRun += 1
@@ -20,41 +20,19 @@ def run_network():
             step += 1
             gameCicle += 1
             action = RL.choose_action(observation)
-
             observation_,reward,done,info = env.step(action)
-
             RL.store_transition(observation,action,reward,observation_)
 
             if step % memory_size == 0:
                 RL.learn()
+                evaluator.history_loss = RL.currentLoss
+
             observation = observation_
 
-            # plt.axis([0, gameSize, 0, 10000])
-            # plt.scatter(gameSize, env.cash)
-            # plt.pause(0.05)
-            #plt.plot(x, y1, color='red', linewidth=1.0, linestyle='--')
-
             if done:
-                fund_sum+=env.net_values[-1]
-                avg =fund_sum / gameRun
-
-
-                logStr = "netValue:"+str(env.net_values[-1]) + " cash:"+str(env.cash)+" game:"+str(gameRun)+" used_steps:"+str(gameCicle) + " fund_avg(netValue):"+ str(avg)
-
-                with open('log.txt', 'a') as file:
-                    file.write(logStr)
-                    file.write('\n')
-
-                with open('netValue.txt', 'a') as file:
-                    file.write(str(env.net_values[-1]))
-                    file.write('\n')
-
-                print(logStr)
-
+                evaluator.update(env.net_values[-1],env.cash,gameCicle,env.position)
                 RL.memory_counter = 0
                 break
-
-
 
 
 
@@ -74,11 +52,14 @@ if __name__ == "__main__":
                       learning_rate=0.03,
                       reward_decay=0.7,
                       e_greedy=0.9,
-                      replace_target_iter=200,
+                      replace_target_iter=100,
                       memory_size=memory_size,
                       e_greedy_increment = 0.001,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,
                       load_weight=False
                       )
+
+    evaluator = Evaluator(write_to_file=True)
+
     run_network()
