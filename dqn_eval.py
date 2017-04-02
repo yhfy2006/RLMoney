@@ -8,7 +8,7 @@ import sys, getopt
 
 class Evaluator(object):
 
-    def __init__(self,deque_window=1500,write_to_file=False,data_file = 'dataLog.csv',print_data_log = True):
+    def __init__(self,deque_window=400,write_to_file=False,data_file = 'dataLog.csv',print_data_log = True):
         self.net_values_list = []
         self.cash_list = []
         self.game_cicles_list = []
@@ -57,17 +57,7 @@ class Evaluator(object):
                     que_sum += (1 - discount) * val
                     ema.append(que_sum)
                     vals.append(val)
-        return vals
-
-        # ax1 = plt.subplot('121')
-        # ax2 = plt.subplot('122')
-        #
-        # ax1.plot(ema)
-        # ax1.grid(True)
-        # ax2.plot(vals)
-        # ax2.grid(True)
-        #
-        # plt.show()
+        return ema
 
     def append_date_to_file(self,net_value,cash,game_cicle,position):
         outStr = str(net_value)+","+str(cash)+","+str(game_cicle)+","+str(position)
@@ -122,6 +112,7 @@ def print_d(option):
 
 def plot_d(option):
     eval = Evaluator()
+    eval.load_from_data()
     if option == 'ov_avg':
         eval.plot(eval.overall_avg())
     if option == 'dq_avg':
@@ -133,7 +124,7 @@ def plot_d(option):
 
 def main(argv):
    try:
-      opts, args = getopt.getopt(argv,"r:l",["ov_avg","dq_avg","exp_avg"])
+      opts, args = getopt.getopt(argv,"r:l:",["ov_avg","dq_avg","exp_avg"])
    except getopt.GetoptError:
       print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg')
       sys.exit(2)
@@ -145,19 +136,21 @@ def main(argv):
          print ('dq_avg = deque_ avg')
          print ('exp_avg = exp_moving_avg')
          sys.exit()
-      elif opt in ("-r", "ov_avg"):
-         print_d('ov_avg')
-      elif opt in ("-r", "dq_avg"):
-         print_d('dq_avg')
-      elif opt in ("-r", "exp_avg"):
-         print_d('exp_avg')
+      if opt == '-r':
+          if arg == 'ov_avg':
+              print_d('ov_avg')
+          if arg == 'dq_avg':
+              print_d('dq_avg')
+          if arg == 'exp_avg':
+              print_d('exp_avg')
 
-      elif opt in ("-l", "ov_avg"):
-         plot_d('ov_avg')
-      elif opt in ("-l", "dq_avg"):
-         plot_d('dq_avg')
-      elif opt in ("-l", "exp_avg"):
-         plot_d('exp_avg')
+      if opt == '-l':
+          if arg == 'ov_avg':
+              plot_d('ov_avg')
+          if arg == 'dq_avg':
+              plot_d('dq_avg')
+          if arg == 'exp_avg':
+              plot_d('exp_avg')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
