@@ -31,7 +31,7 @@ class Evaluator(object):
         self.game_cicles_list.append(game_cicle)
         self.postion_list.append(position)
         if self.write_to_file:
-            self.append_date_to_file(net_value,cash,game_cicle,position)
+            self.append_date_to_file(net_value,cash,game_cicle,position,net_stdev)
 
     def sharpe_ratio(self):
         return_value = [(i-10000)/float(10000) for i in self.net_values_list]
