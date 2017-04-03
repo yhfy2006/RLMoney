@@ -2,3 +2,5 @@
 .idea/.name
 
 *.pyc
+
+.ipynb_checkpoints/*

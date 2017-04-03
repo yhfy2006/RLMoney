@@ -30,6 +30,10 @@ class Evaluator(object):
         if self.write_to_file:
             self.append_date_to_file(net_value,cash,game_cicle,position)
 
+    def sharpe_ratio(self):
+        return_value = [(i-10000)/float(10000) for i in self.net_values_list]
+        return_value_std = []
+
     def overall_avg(self):
         result = []
         cache = []
