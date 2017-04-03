@@ -28,7 +28,8 @@ def run_network():
             observation = observation_
 
             if done:
-                evaluator.update(env.net_values[-1],env.cash,gameCicle,env.position)
+                net_stdev =evaluator.std_netvalues(env.net_values)
+                evaluator.update(env.net_values[-1],env.cash,net_stdev,gameCicle,env.position)
                 RL.memory_counter = 0
                 break
 

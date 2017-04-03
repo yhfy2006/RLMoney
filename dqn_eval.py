@@ -9,8 +9,9 @@ import statistics
 
 class Evaluator(object):
 
-    def __init__(self,deque_window=400,write_to_file=False,data_file = 'dataLog.csv',print_data_log = True):
+    def __init__(self,deque_window=400,write_to_file=False,data_file = 'data/dataLog',print_data_log = True,log_all_netvalues = False):
         self.net_values_list = []
+        self.net_stdev_list =[]
         self.cash_list = []
         self.game_cicles_list = []
         self.postion_list = []
@@ -19,11 +20,13 @@ class Evaluator(object):
         self.write_to_file = write_to_file
         self.print_data = print_data_log
         self.data_file = data_file
+        self.log_all_netvalues = log_all_netvalues
 
 
 
-    def update(self,net_value,cash,game_cicle,position):
+    def update(self,net_value,net_stdev,cash,game_cicle,position):
         self.net_values_list.append(net_value)
+        self.net_stdev_list.append(net_stdev)
         self.cash_list.append(cash)
         self.game_cicles_list.append(game_cicle)
         self.postion_list.append(position)
@@ -32,21 +35,27 @@ class Evaluator(object):
 
     def sharpe_ratio(self):
         return_value = [(i-10000)/float(10000) for i in self.net_values_list]
-        return_value_std = []
+        return_value_std = self.net_stdev_list
+        ratio = [return_value[i]/float(return_value_std) for i in range(len(return_value))]
+        return ratio
+
+    def std_netvalues(self,value_list):
+        return statistics.stdev(value_list)
 
     def overall_avg(self):
         result = []
         cache = []
-        for i in self.net_values_list:
-            cache.append(i)
+        for net_value in self.net_values_list:
+            # net_values is a list
+            cache.append(net_value)
             result.append( sum(cache)/float(len(cache)) )
         return result
 
     def deque_avg(self):
         self.q_netValue.clear()
         result = []
-        for i in self.net_values_list:
-            self.q_netValue.append(i)
+        for net_value in self.net_values_list:
+            self.q_netValue.append(net_value)
             avg = sum(self.q_netValue)/float(len(self.q_netValue))
             result.append(avg)
         return result
@@ -54,8 +63,8 @@ class Evaluator(object):
     def deque_mid(self):
         self.q_netValue.clear()
         result = []
-        for i in self.net_values_list:
-            self.q_netValue.append(i)
+        for net_value in self.net_values_list:
+            self.q_netValue.append(net_value)
             avg = statistics.median(self.q_netValue)
             result.append(avg)
         return result
@@ -74,13 +83,21 @@ class Evaluator(object):
                     vals.append(val)
         return ema
 
-    def append_date_to_file(self,net_value,cash,game_cicle,position):
-        outStr = str(net_value)+","+str(cash)+","+str(game_cicle)+","+str(position)
+    def append_date_to_file(self,net_value,cash,game_cicle,position,net_std):
+        outStr = str(net_value)+","+str(cash)+","+str(game_cicle)+","+str(position)+","+str(net_std)
+        index = len(self.net_values_list)
         if self.print_data:
-            print(str(len(self.net_values_list))+"===>"+outStr)
-        with open(self.data_file, 'a') as file:
+            print(str(index)+"===>"+outStr)
+        with open(self.data_file+".csv", 'a') as file:
             file.write(outStr)
             file.write('\n')
+
+        # if self.log_all_netvalues:
+        #     with open(self.data_file+"_netvalues.csv", 'a') as fp:
+        #         for net_value in net_value:
+        #             fp.write(str(index)+","+str(net_value))
+        #             fp.write('\n')
+
 
 
 
@@ -91,20 +108,22 @@ class Evaluator(object):
         self.postion_list.clear()
         self.q_netValue.clear()
         self.history_loss.clear()
+        self.net_stdev_list.clear()
 
 
     def load_from_data(self):
         self._clear_data()
         temp_write_to_file = self.write_to_file
         self.write_to_file = False
-        with open(self.data_file) as fp:
+        with open(self.data_file+".csv") as fp:
             for line in fp:
                 values = line.split(",")
                 net_value = float(values[0])
                 cash = float(values[1])
                 game_cicle = float(values[2])
                 position = float(values[3])
-                self.update(net_value,cash,game_cicle,position)
+                net_std =float(values[4])
+                self.update(net_value,cash,game_cicle,position,net_std)
 
         self.write_to_file = temp_write_to_file
 
