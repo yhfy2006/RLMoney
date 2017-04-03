@@ -9,7 +9,7 @@ def run_network():
     step = 0
     gameRun = 0
 
-    for episode in range(500000):
+    for episode in range(9000):
         gameRun += 1
         observation = env.reset()
 
@@ -42,8 +42,8 @@ if __name__ == "__main__":
     n_actions = 3
     n_features =4
 
-    rnn_train_length = 20
-    train_batch_size = 10
+    rnn_train_length = 50
+    train_batch_size = 20
     memory_size = rnn_train_length + train_batch_size - 1
 
     RL = DeepQNetwork(n_actions, n_features,
@@ -52,7 +52,7 @@ if __name__ == "__main__":
                       e_greedy=0.9,
                       replace_target_iter=200,
                       memory_size=memory_size,
-                      e_greedy_increment = 0.001,
+                      e_greedy_increment = 0.0005,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,
                       load_weight=False
