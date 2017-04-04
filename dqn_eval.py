@@ -25,9 +25,9 @@ class Evaluator(object):
 
 
     def update(self,net_value,net_stdev,cash,game_cicle,position):
-        self.net_values_list.append(net_value)
         if float(net_stdev) == 0:
             return
+        self.net_values_list.append(net_value)
         self.net_stdev_list.append(net_stdev)
         self.cash_list.append(cash)
         self.game_cicles_list.append(game_cicle)
