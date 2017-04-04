@@ -36,7 +36,7 @@ class Evaluator(object):
     def sharpe_ratio(self):
         return_value = [(i-10000)/float(10000) for i in self.net_values_list]
         return_value_std = self.net_stdev_list
-        ratio = [return_value[i]/float(return_value_std) for i in range(len(return_value))]
+        ratio = [return_value[i]/float(return_value_std[i]) for i in range(len(return_value))]
         return ratio
 
     def std_netvalues(self,value_list):
