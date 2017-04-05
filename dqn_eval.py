@@ -42,7 +42,12 @@ class Evaluator(object):
         return ratio
 
     def std_netvalues(self,value_list):
-        return statistics.stdev(value_list)
+        head = 10000
+        shifted_values = []
+        for i in range(len(value_list)):
+            value = (value_list[i]-head)/float(value_list[i])
+            shifted_values.append(value)
+        return statistics.stdev(shifted_values)
 
     def overall_avg(self):
         result = []
