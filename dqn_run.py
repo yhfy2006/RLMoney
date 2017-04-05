@@ -38,8 +38,9 @@ def run_network():
 if __name__ == "__main__":
 
     gameSize = 250
+    initial_cash =10000
 
-    env = Game(gameSize, 10000, 50, 0.3)
+    env = Game(gameSize, initial_cash, 50, 0.3)
     n_actions = 3
     n_features =4
 
@@ -59,6 +60,6 @@ if __name__ == "__main__":
                       load_weight=False
                       )
 
-    evaluator = Evaluator(write_to_file=True)
+    evaluator = Evaluator(write_to_file=True,initial_cash=initial_cash)
 
     run_network()

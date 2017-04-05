@@ -9,7 +9,7 @@ import statistics
 
 class Evaluator(object):
 
-    def __init__(self,deque_window=400,write_to_file=False,data_file = 'data/dataLog',print_data_log = True,log_all_netvalues = False):
+    def __init__(self,deque_window=400,initial_cash = 10000,write_to_file=False,data_file = 'data/dataLog',print_data_log = True,log_all_netvalues = False):
         self.net_values_list = []
         self.net_stdev_list =[]
         self.cash_list = []
@@ -21,6 +21,7 @@ class Evaluator(object):
         self.print_data = print_data_log
         self.data_file = data_file
         self.log_all_netvalues = log_all_netvalues
+        self.initial_cash =initial_cash
 
 
 
@@ -36,13 +37,13 @@ class Evaluator(object):
             self.append_date_to_file(net_value,cash,game_cicle,position,net_stdev)
 
     def sharpe_ratio(self):
-        return_value = [(i-10000)/float(10000) for i in self.net_values_list]
+        return_value = [(i-self.initial_cash)/float(self.initial_cash) for i in self.net_values_list]
         return_value_std = self.net_stdev_list
         ratio = [return_value[i]/float(return_value_std[i]) for i in range(len(return_value))]
         return ratio
 
     def std_netvalues(self,value_list):
-        head = 10000
+        head = self.initial_cash
         shifted_values = []
         for i in range(len(value_list)):
             value = (value_list[i]-head)/float(value_list[i])
@@ -154,7 +155,7 @@ def print_d(option):
         time.sleep(6)
 
 def plot_d(option):
-    eval = Evaluator()
+    eval = Evaluator(data_file='data/dataLog_4_4_2017')
     eval.load_from_data()
     if option == 'ov_avg':
         eval.plot(eval.overall_avg())
@@ -164,6 +165,8 @@ def plot_d(option):
         eval.plot(eval.exp_moving_avg())
     if option == 'dq_mid':
         eval.plot(eval.deque_mid())
+    if option == 'sp_rio':
+        eval.plot(eval.sharpe_ratio())
 
 
 
@@ -201,6 +204,8 @@ def main(argv):
               plot_d('exp_avg')
           if arg == 'dq_mid':
               plot_d('dq_mid')
+          if arg == 'sp_rio':
+              plot_d('sp_rio')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
