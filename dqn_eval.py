@@ -174,7 +174,7 @@ def main(argv):
    try:
       opts, args = getopt.getopt(argv,"r:l:",["ov_avg","dq_avg","dq_mid","exp_avg"])
    except getopt.GetoptError:
-      print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg|dq_mid')
+      print ('usage: dqn_eval.py -r(print)|-l(plot) ov_avg|dq_avg|exp_avg|dq_mid|sp_rio')
       sys.exit(2)
 
    for opt, arg in opts:
