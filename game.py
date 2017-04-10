@@ -1,14 +1,131 @@
 import json
 import random
+from collections import deque
 
 import numpy as np
+
+
+class Reward(object):
+    """
+    this is a class for storing and update delayed reward
+    """
+    def __init__(self, value=None):
+        self.value = value  # this would be the actual value of the reward
+
+    def add(self, value):
+        """
+        add the value of the current reward
+
+        :param value:
+        :return:
+        """
+        self.value += value
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self.value)
+
+
+class Account(object):
+    """
+    this class is for managing the cash and position info.
+    it keeps track of the cash amount, of the size of the positions and of cost of the positions,
+    and updates the corresponding rewards when a position is sold
+    """
+    def __init__(self, initial_cash, transaction_fee=0):
+        self.cash = initial_cash  # available cash
+
+        self.queue = deque()  # the queue for storing the positions
+        self.position_size = 0  # size of all positions
+
+        self.transactions_fee = transaction_fee
+
+    def buy(self, buying_amount, buying_price):
+        """
+        buy stocks.
+        update the queue according to the input info.
+
+        :param buying_amount:
+        :param buying_price:
+        :param reward_obj:
+
+        :return: the reward object
+        """
+        cost = buying_amount * buying_price + self.transactions_fee
+
+        if cost <= self.cash:
+            self.cash -= cost
+            self.position_size += buying_amount
+            reward = Reward(-self.transactions_fee)
+            self.queue.appendleft((buying_amount, buying_price, reward))
+
+            return reward
+        else:
+            return Reward(0)
+
+    def sell(self, selling_amount, selling_price):
+        """
+        sell stocks.
+        update the queue according to the input info.
+
+        :param selling_amount:
+        :param selling_price:
+        :param reward_obj:
+
+        :return: the reward object
+        """
+        assert selling_amount > 0
+
+        if self.position_size > 0:  # there are stocks to sell
+            if selling_amount > self.position_size:
+                selling_amount = self.position_size  # can't sell more than the size of current position
+
+            selling_reward = Reward(-self.transactions_fee)
+            self.cash -= self.transactions_fee
+
+            while selling_amount > 0:
+                buying_amount, buying_price, buying_reward = self.queue.pop()
+
+                effective_amount = min(buying_amount, selling_amount)  # actual selling amount for this long position
+                income = (selling_price - buying_price) * effective_amount  # cash income before fee
+                buying_reward.add(income / 2)  # update rewards
+                selling_reward.add(income / 2)
+
+                self.cash += selling_price * effective_amount  # update cash
+                self.position_size -= effective_amount  # update position
+
+                if selling_amount < buying_amount:  # some of the long position left, push back to queue
+                    self.queue.append((buying_amount-selling_amount, buying_price, buying_reward))
+
+                selling_amount -= effective_amount  # how many left to sell
+
+            return selling_reward
+
+        else:
+            return Reward(0)
+
+    def liquidate_positions(self, selling_price):
+        """
+        liquidate all the positions.
+        happens at the very end of games.
+
+        :param selling_price:
+        :return:
+        """
+        if self.queue:
+            self.sell(self.position_size, selling_price)
+
+    def get_net_value(self, market_price):
+        return self.cash + self.position_size * market_price
 
 
 class Game(object):
     """
 
     """
-    def __init__(self, game_length, initial_cash, trading_amount, max_loss):
+    def __init__(self, game_length, initial_cash, trading_amount, max_loss, transaction_fee):
         """
         ALL games starts with stock price equals 1
 
@@ -25,13 +142,14 @@ class Game(object):
         self.initial_cash = initial_cash
         self.trading_amount = trading_amount
         self.max_loss = max_loss
+        self.transaction_fee = transaction_fee
 
         self.observations = None
         self.prices = None
         self.net_values = None
         self.pointer = 0
-        self.cash = 0
-        self.position = 0
+
+        self.account = Account(self.initial_cash, self.transaction_fee)
 
     def render(self):
         pass
@@ -93,31 +211,30 @@ class Game(object):
         open_price, high_price, low_price, close_price = self.prices[self.pointer]  # get prices
 
         if action == 0:  # buy at open
-            cost = open_price * self.trading_amount
-            if cost <= self.cash:  # has sufficient funds
-                self.position += self.trading_amount
-                self.cash -= cost
+            reward = self.account.buy(self.trading_amount, open_price)
         elif action == 1:  # sell at open
-            if self.position >= self.trading_amount:
-                self.position -= self.trading_amount
-                self.cash += open_price * self.trading_amount
+            reward = self.account.sell(self.trading_amount, open_price)
         elif action == 2:  # do nothing
-            pass
+            reward = Reward(0)
         else:
             raise ValueError('action must be 0, 1 or 2')
 
         # new observation
         new_observation = self.observations[self.pointer]
 
-        # new net_value and new reward
-        net_value = self.cash + self.position * close_price
-        reward = net_value - self.net_values[-1]
-        self.net_values.append(net_value)
-
         # check if game over
         end_of_game = (self.pointer == self.game_length - 1)
-        lost_too_much = (self.cash + self.position * low_price) < self.initial_cash * (1 - self.max_loss)
+        lost_too_much = self.account.get_net_value(low_price) < self.initial_cash * (1 - self.max_loss)
         done = end_of_game or lost_too_much
+
+        if end_of_game:
+            self.account.liquidate_positions(close_price)
+        if lost_too_much:
+            self.account.liquidate_positions(low_price)
+
+        # save net_value
+        net_value = self.account.get_net_value(close_price)
+        self.net_values.append(net_value)
 
         # new info
         info = {}
@@ -126,7 +243,13 @@ class Game(object):
 
 
 def main():
-    g = Game(250, 100, 5, 0.3)
+    rewards = []
+
+    g = Game(game_length=250,
+             initial_cash=10000,
+             trading_amount=50,
+             max_loss=0.3,
+             transaction_fee=10)
     obs = g.reset()
 
     buy = 0
@@ -134,6 +257,18 @@ def main():
     wait = 2
 
     new_observation, reward, done, info = g.step(buy)
+    rewards.append(reward)
+
+    new_observation, reward, done, info = g.step(buy)
+    rewards.append(reward)
+
+    new_observation, reward, done, info = g.step(sell)
+    rewards.append(reward)
+
+    new_observation, reward, done, info = g.step(sell)
+    rewards.append(reward)
+
+    print(rewards)
 
 
 if __name__ == '__main__':
