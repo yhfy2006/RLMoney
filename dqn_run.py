@@ -58,6 +58,6 @@ if __name__ == "__main__":
                       load_weight=False
                       )
 
-    evaluator = Evaluator(write_to_file=True,initial_cash=initial_cash)
+    evaluator = Evaluator(write_to_file=True,print_data_log=False,initial_cash=initial_cash)
 
     run_network()
