@@ -36,6 +36,8 @@ class DeepQNetwork:
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
         self.currentLoss = 0.0
 
+        self.single_game_history = []
+
         # total learning step
         self.learn_step_counter = 0
 
@@ -46,6 +48,22 @@ class DeepQNetwork:
         self._build_net()
 
         self.cost_his = []
+
+    def store_history(self,s, a, r, s_):
+        record = (s,a,r,s_)
+        self.single_game_history.append(record)
+
+    def learn_on_history(self):
+        step = 0
+        for i in self.single_game_history:
+            self.store_transition(i[0],i[1],i[2].value,i[3])
+            if step % self.memory_size == 0 and step is not 0:
+                self.learn()
+            step += 1
+
+    def reset_data_record(self):
+        self.single_game_history.clear()
+        self.memory_counter = 0
 
     def my_init(self,shape, name=None):
         value = np.random.random(shape)

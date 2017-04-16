@@ -19,18 +19,16 @@ def run_network():
             gameCicle += 1
             action = RL.choose_action(observation)
             observation_,reward,done,info = env.step(action)
-            RL.store_transition(observation,action,reward,observation_)
-
-            if step % memory_size == 0:
-                RL.learn()
-                evaluator.history_loss = RL.currentLoss
+            RL.store_history(observation,action,reward,observation_)
 
             observation = observation_
 
             if done:
+                RL.learn_on_history()
                 net_stdev =evaluator.std_netvalues(env.net_values)
                 evaluator.update(env.net_values[-1],env.cash,net_stdev,gameCicle,env.position)
                 RL.memory_counter = 0
+                RL.reset_data_record()
                 break
 
 
@@ -40,7 +38,7 @@ if __name__ == "__main__":
     gameSize = 250
     initial_cash =10000
 
-    env = Game(gameSize, initial_cash, 50, 0.3)
+    env = Game(gameSize, initial_cash, 50, 0.3,transaction_fee=10)
     n_actions = 3
     n_features =4
 
