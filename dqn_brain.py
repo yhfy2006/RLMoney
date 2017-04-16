@@ -132,7 +132,7 @@ class DeepQNetwork:
 
     def learn(self):
         # check to replace target parameters
-        if self.learn_step_counter % self.replace_target_iter == 0:
+        if self.learn_step_counter % self.replace_target_iter == 0 and self.learn_step_counter is not 0:
             self._replace_target_params()
             print('\ntarget_params_replaced\n')
 

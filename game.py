@@ -199,6 +199,8 @@ class Game(object):
         self.position = 0
         self.net_values = [self.cash]
 
+        self.account = Account(self.initial_cash, self.transaction_fee)
+
         return self.observations[0, :]
 
     def step(self, action):

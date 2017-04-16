@@ -26,7 +26,8 @@ def run_network():
             if done:
                 RL.learn_on_history()
                 net_stdev =evaluator.std_netvalues(env.net_values)
-                evaluator.update(env.net_values[-1],env.cash,net_stdev,gameCicle,env.position)
+                print("game:",episode,env.net_values[-1],env.account.cash,net_stdev,gameCicle,env.account.position_size)
+                evaluator.update(env.net_values[-1],env.account.cash,net_stdev,gameCicle,env.account.position_size)
                 RL.memory_counter = 0
                 RL.reset_data_record()
                 break
