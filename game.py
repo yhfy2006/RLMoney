@@ -197,7 +197,7 @@ class Game(object):
         # choose a company and load the data
         raw_data = None
         while True:
-            company = random.choice(self.companies)  # randomly select a company
+            company = random.choice(self.companies[:101])  # randomly select a company
             with open('prices/{}.json'.format(company)) as file:
                 raw_data = json.load(file)  # read price data of this company
 

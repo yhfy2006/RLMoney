@@ -153,7 +153,7 @@ class DeepQNetwork:
 
         # train eval network
         history = self.evaluate_net.fit(X,q_target,
-                nb_epoch=1,
+                epochs=1,
                 shuffle=False,
                 verbose=0)
 
