@@ -116,7 +116,7 @@ class Account(object):
                 buying_amount, buying_price, buying_reward = self.queue.pop()
 
                 effective_amount = min(buying_amount, selling_amount)  # actual selling amount for this buying order
-                self.cash += (selling_price - buying_price) * effective_amount
+                self.cash += selling_price * effective_amount
                 self.position_size -= effective_amount
 
                 buying_reward.sell(effective_amount, selling_price, 0)  # not counting selling fees in buying reward
@@ -288,12 +288,15 @@ class Game(object):
 
 
 def main():
-    g = Game(game_length=250,
+    g = Game(game_length=10,
              initial_cash=10000,
              trading_amount=50,
              max_loss=0.3,
-             transaction_fee=1)
+             transaction_fee=0)
     obs = g.reset()
+
+    g.prices = np.array([3,4,5,4,3,2,1,2,3,4]).reshape((-1, 1)).dot(np.ones((1,4)))
+    print(g.prices)
 
     buy = 0
     sell = 1
@@ -301,19 +304,44 @@ def main():
 
     rewards = []
 
-    new_observation, reward, done, info = g.step(buy)
+    new_observation, reward, done, info = g.step(buy)  # buy at 4
     rewards.append(reward)
+    print(info['cash'], info['positions'])
 
-    new_observation, reward, done, info = g.step(buy)
+    new_observation, reward, done, info = g.step(wait)  # wait at 5
     rewards.append(reward)
+    print(info['cash'], info['positions'])
 
-    new_observation, reward, done, info = g.step(sell)
+    new_observation, reward, done, info = g.step(sell)  # 4
     rewards.append(reward)
+    print(info['cash'], info['positions'])
 
-    new_observation, reward, done, info = g.step(sell)
+    new_observation, reward, done, info = g.step(wait)  # 3
     rewards.append(reward)
+    print(info['cash'], info['positions'])
 
-    print([r.value for r in rewards])
+    new_observation, reward, done, info = g.step(wait)  # 2
+    rewards.append(reward)
+    print(info['cash'], info['positions'])
+
+    new_observation, reward, done, info = g.step(buy)  # 1
+    rewards.append(reward)
+    print(info['cash'], info['positions'])
+
+    new_observation, reward, done, info = g.step(buy)  # 2
+    rewards.append(reward)
+    print(info['cash'], info['positions'])
+
+    new_observation, reward, done, info = g.step(sell)  # 3
+    rewards.append(reward)
+    print(info['cash'], info['positions'])
+
+    new_observation, reward, done, info = g.step(sell)  # 4
+    rewards.append(reward)
+    print(info['cash'], info['positions'])
+
+    # print([r.value for r in rewards])
+    print(info['cash'], info['positions'])
 
 
 if __name__ == '__main__':
