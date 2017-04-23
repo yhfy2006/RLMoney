@@ -172,7 +172,7 @@ class Game(object):
         #     companies = json.load(file)
         # self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
 
-        self.companies = ['AAPL']
+        self.companies = ['AAON']
 
         self.game_length = game_length
         self.initial_cash = initial_cash
