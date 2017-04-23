@@ -85,10 +85,10 @@ class DeepQNetwork:
         model.add(LSTM(512,
                        input_shape=(self.rnn_train_length, self.n_features),return_sequences=True))
         model.add((Activation('relu')))
-        model.add(Dropout(0.5))
+        #model.add(Dropout(0.5))
         model.add(LSTM(512, input_shape=(self.rnn_train_length, self.n_features)))
         model.add((Activation('relu')))
-        model.add(Dropout(0.4))
+        #model.add(Dropout(0.4))
         model.add(Dense(self.n_actions,init="normal"))
         model.compile(optimizer='adam', loss='mse',metrics=['accuracy'])
         print(model.summary())
