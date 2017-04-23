@@ -17,7 +17,13 @@ def run_network():
         while True:
             step += 1
             gameCicle += 1
-            action = RL.choose_action(observation)
+
+            if env.pointer < rnn_train_length - 1:
+                action = RL.choose_action(None)
+            else:
+                obs = env.observations[env.pointer-rnn_train_length+1:env.pointer+1]
+                action = RL.choose_action(obs)
+
             observation_,reward,done,info = env.step(action)
             RL.store_history(observation,action,reward,observation_)
 
@@ -52,7 +58,7 @@ if __name__ == "__main__":
                       reward_decay=0.7,
                       e_greedy=0.9,
                       replace_target_iter=50,
-                      memory_size=memory_size,
+                      memory_size=train_batch_size,
                       e_greedy_increment = 0.005,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,

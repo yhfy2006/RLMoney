@@ -110,17 +110,14 @@ class DeepQNetwork:
         self.memory.iloc[index, :] = transition
         self.memory_counter += 1
 
-    def choose_action(self, observation):
+    def choose_action(self, observations):
         # to have batch dimension when feed into tf placeholder
-        observation = observation[np.newaxis, :]
-        if np.random.uniform() < self.epsilon:
-            # forward feed the observation and get q value for every actions
-            x = self.memory.iloc[-self.rnn_train_length:, :self.n_features].values
-            x = x.reshape(1, self.rnn_train_length, self.n_features)
+        if observations == None or np.random.uniform() >= self.epsilon:
+            action = np.random.randint(0, self.n_actions)
+        else:
+            x = observations.reshape(1, self.rnn_train_length, self.n_features)
             actions_value = self.evaluate_net.predict(x)
             action = np.argmax(actions_value)
-        else:
-            action = np.random.randint(0, self.n_actions)
         return action
 
     def _replace_target_params(self):
