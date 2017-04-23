@@ -26,7 +26,7 @@ class Reward(object):
             return self._value
         else:  # never computed before
             if self._remaining_amount == 0:  # no more position to be covered
-                self._value = (self._payoff / self._cost) - 1  # compute reward
+                self._value = ((self._payoff / self._cost) - 1) * 10  # compute reward
                 return self._value
             else:
                 raise ValueError('Remaining Position must be 0 when computing reward')  # raise error
@@ -197,7 +197,7 @@ class Game(object):
         # choose a company and load the data
         raw_data = None
         while True:
-            company = random.choice(self.companies[:101])  # randomly select a company
+            company = random.choice(self.companies[:1])  # randomly select a company
             with open('prices/{}.json'.format(company)) as file:
                 raw_data = json.load(file)  # read price data of this company
 
