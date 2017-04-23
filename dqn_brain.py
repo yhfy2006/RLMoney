@@ -54,12 +54,8 @@ class DeepQNetwork:
         self.single_game_history.append(record)
 
     def learn_on_history(self):
-        step = 0
-        for i in self.single_game_history:
-            self.store_transition(i[0],i[1],i[2].value,i[3])
-            if step % self.memory_size == 0 and step is not 0:
-                self.learn()
-            step += 1
+        self.batch_size = len(self.single_game_history)-self.rnn_train_length + 1
+        self.learn()
 
     def reset_data_record(self):
         self.single_game_history.clear()
@@ -74,11 +70,12 @@ class DeepQNetwork:
         X = np.ndarray(shape=(self.batch_size, self.rnn_train_length,self.n_features), dtype=float)
         X_ = np.ndarray(shape=(self.batch_size, self.rnn_train_length, self.n_features), dtype=float)
         for i in range(self.batch_size):
-            X[i] = self.memory.iloc[i:i+self.rnn_train_length,:self.n_features].values
-            X_[i] = self.memory.iloc[i:i+self.rnn_train_length,-self.n_features:].values
-        s = self.memory.iloc[self.rnn_train_length -1:,:self.n_features].values
-        s_ = self.memory.iloc[self.rnn_train_length -1:,-self.n_features:].values
-        return X,X_,s,s_
+            X[i] = [tuple[0] for tuple in self.single_game_history[i:i+self.rnn_train_length]]
+            X_[i] = [tuple[3] for tuple in self.single_game_history[i:i+self.rnn_train_length]]
+
+        # s = self.memory.iloc[self.rnn_train_length -1:,:self.n_features].values
+        # s_ = self.memory.iloc[self.rnn_train_length -1:,-self.n_features:].values
+        return X,X
 
     def _build_keras_net(self):
         model = Sequential()
@@ -136,7 +133,7 @@ class DeepQNetwork:
             self._replace_target_params()
             print('\ntarget_params_replaced\n')
 
-        X,X_,s,s_ = self.build_train_data()
+        X,X_= self.build_train_data()
 
         #
         #当前状态的input序列在memory里，那下一个状态的input序列在哪里
@@ -146,10 +143,10 @@ class DeepQNetwork:
         q_target = q_eval.copy()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-        eval_act_index = self.memory.values[self.rnn_train_length-1:, self.n_features].astype(int)
-        reward = self.memory.values[self.rnn_train_length-1:, self.n_features + 1]
+        eval_act_index = np.asarray([i[1] for i in self.single_game_history[self.rnn_train_length-1:]] )  #self.memory.values[self.rnn_train_length-1:, self.n_features].astype(int)
+        rewards =  np.asarray([i[2].value for i in self.single_game_history[self.rnn_train_length-1:]])   # self.memory.values[self.rnn_train_length-1:, self.n_features + 1]
 
-        q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
+        q_target[batch_index, eval_act_index] = rewards + self.gamma * np.max(q_next, axis=1)
 
         # train eval network
         history = self.evaluate_net.fit(X,q_target,
