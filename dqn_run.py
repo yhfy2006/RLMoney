@@ -51,7 +51,7 @@ if __name__ == "__main__":
                       learning_rate=0.03,
                       reward_decay=0.7,
                       e_greedy=0.9,
-                      replace_target_iter=200,
+                      replace_target_iter=50,
                       memory_size=memory_size,
                       e_greedy_increment = 0.005,
                       rnn_train_length = rnn_train_length,
