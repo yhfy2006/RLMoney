@@ -39,7 +39,7 @@ if __name__ == "__main__":
     gameSize = 250
     initial_cash =10000
 
-    env = Game(gameSize, initial_cash, 50, 0.7,transaction_fee=1)
+    env = Game(gameSize, initial_cash, 50, 0.3,transaction_fee=1)
     n_actions = 3
     n_features =4
 
