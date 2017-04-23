@@ -168,9 +168,11 @@ class Game(object):
         :param max_loss: maximum loss (for example, 0.3 means when the loss reaches 30% of the initial cash, game ends)
         :param transaction_fee: fixed amount transaction fee
         """
-        with open('companies.json') as file:  # read companies.json
-            companies = json.load(file)
-        self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
+        # with open('companies.json') as file:  # read companies.json
+        #     companies = json.load(file)
+        # self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
+
+        self.companies = ['AAPL']
 
         self.game_length = game_length
         self.initial_cash = initial_cash
@@ -197,7 +199,7 @@ class Game(object):
         # choose a company and load the data
         raw_data = None
         while True:
-            company = random.choice(self.companies[:1])  # randomly select a company
+            company = random.choice(self.companies)  # randomly select a company
             with open('prices/{}.json'.format(company)) as file:
                 raw_data = json.load(file)  # read price data of this company
 
@@ -206,7 +208,8 @@ class Game(object):
 
         # randomly pick a start date, first day of the game
         # random.randint: Return a random integer N such that a <= N <= b.
-        start = random.randint(1, len(raw_data) - self.game_length)
+        # start = random.randint(1, len(raw_data) - self.game_length)
+        start = 100
 
         # pre-allocate memory
         self.observations = np.zeros((self.game_length, 4), dtype=np.float64)
