@@ -7,10 +7,8 @@ from dqn_eval import Evaluator
 
 def run_network():
     step = 0
-    gameRun = 0
 
     for episode in range(9000):
-        gameRun += 1
         observation = env.reset()
 
         gameCicle = 0
@@ -51,14 +49,12 @@ if __name__ == "__main__":
 
     rnn_train_length = 30
     train_batch_size = 20
-    memory_size = rnn_train_length + train_batch_size - 1
 
     RL = DeepQNetwork(n_actions, n_features,
                       learning_rate=0.03,
                       reward_decay=0.7,
                       e_greedy=0.9,
                       replace_target_iter=50,
-                      memory_size=train_batch_size,
                       e_greedy_increment = 0.005,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,
