@@ -168,11 +168,11 @@ class Game(object):
         :param max_loss: maximum loss (for example, 0.3 means when the loss reaches 30% of the initial cash, game ends)
         :param transaction_fee: fixed amount transaction fee
         """
-        # with open('companies.json') as file:  # read companies.json
-        #     companies = json.load(file)
-        # self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
+        with open('companies.json') as file:  # read companies.json
+            companies = json.load(file)
+        self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
 
-        self.companies = ['AAON']
+        # self.companies = ['AAON']
 
         self.game_length = game_length
         self.initial_cash = initial_cash
@@ -184,6 +184,10 @@ class Game(object):
         self.prices = None
         self.net_values = None
         self.pointer = 0
+
+        self._currentCompany = ''
+        self._startPoint = 0
+
 
         self.account = Account(self.initial_cash, self.transaction_fee)
 
@@ -200,6 +204,7 @@ class Game(object):
         raw_data = None
         while True:
             company = random.choice(self.companies)  # randomly select a company
+            self._currentCompany = company
             with open('prices/{}.json'.format(company)) as file:
                 raw_data = json.load(file)  # read price data of this company
 
@@ -208,8 +213,9 @@ class Game(object):
 
         # randomly pick a start date, first day of the game
         # random.randint: Return a random integer N such that a <= N <= b.
-        # start = random.randint(1, len(raw_data) - self.game_length)
-        start = 100
+        start = random.randint(1, len(raw_data) - self.game_length)
+        self._startPoint = start
+        #start = 100
 
         # pre-allocate memory
         self.observations = np.zeros((self.game_length, 4), dtype=np.float64)
@@ -223,7 +229,12 @@ class Game(object):
             record = raw_data[i + start]
             pre_close = float(raw_data[i + start - 1]['Adj_Close'])  # previous adjusted close
 
-            adjust = float(record['Adj_Close']) / float(record['Close'])  # coefficient to adjust prices
+
+            try:
+                #这一步还是会出exception
+                adjust = float(record['Adj_Close']) / float(record['Close'])  # coefficient to adjust prices
+            except:
+                continue
 
             raw_prices = np.array([float(record['Open']),
                                    float(record['High']),
@@ -282,7 +293,10 @@ class Game(object):
         info = {'cash': self.account.cash,
                 'positions': self.account.position_size,
                 'net_value': net_value,
-                'prices': (open_price, high_price, low_price, close_price)}
+                'prices': (open_price, high_price, low_price, close_price),
+                'ticket':self._currentCompany,
+                'startPoint':self._startPoint
+                }
 
         return new_observation, reward, done, info
 

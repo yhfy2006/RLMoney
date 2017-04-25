@@ -92,7 +92,7 @@ class DeepQNetwork:
 
     def choose_action(self, observations):
         # to have batch dimension when feed into tf placeholder
-        if observations == None or np.random.uniform() >= self.epsilon:
+        if observations is None or np.random.uniform() >= self.epsilon:
             action = np.random.randint(0, self.n_actions)
         else:
             x = observations.reshape(1, self.rnn_train_length, self.n_features)
