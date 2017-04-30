@@ -214,7 +214,7 @@ class Game(object):
         # randomly pick a start date, first day of the game
         # random.randint: Return a random integer N such that a <= N <= b.
 
-        start = 2863
+        start = len(raw_data)-300
 
         #start = random.randint(1, len(raw_data) - self.game_length)
         self._startPoint = start
