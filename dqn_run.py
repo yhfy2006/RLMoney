@@ -47,7 +47,7 @@ if __name__ == "__main__":
     n_actions = 3
     n_features =4
 
-    rnn_train_length = 30
+    rnn_train_length = 50
     train_batch_size = 20
 
     RL = DeepQNetwork(n_actions, n_features,
