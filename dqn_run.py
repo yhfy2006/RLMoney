@@ -55,7 +55,7 @@ if __name__ == "__main__":
                       reward_decay=0.7,
                       e_greedy=0.9,
                       replace_target_iter=50,
-                      e_greedy_increment = 0.005,
+                      e_greedy_increment = 0.001,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,
                       load_weight=False
