@@ -49,7 +49,7 @@ if __name__ == "__main__":
     n_actions = 3
     n_features =4
 
-    rnn_train_length = 30
+    rnn_train_length = 40
     train_batch_size = 20
     memory_size = rnn_train_length + train_batch_size - 1
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                       e_greedy=0.9,
                       replace_target_iter=50,
                       memory_size=train_batch_size,
-                      e_greedy_increment = 0.005,
+                      e_greedy_increment = 0.002,
                       rnn_train_length = rnn_train_length,
                       batch_size = train_batch_size,
                       load_weight=False
