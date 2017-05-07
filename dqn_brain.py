@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 from keras.models import Sequential
@@ -14,10 +13,12 @@ class DeepQNetwork:
             reward_decay=0.9,
             e_greedy=0.9,
             replace_target_iter=500,
+            memory_size=500,
             batch_size=60,
             rnn_train_length = 20,
             e_greedy_increment=None,
             load_weight = False,
+            batchSize = 250,
             output_graph=False,
     ):
         self.load_weight =load_weight
@@ -28,6 +29,7 @@ class DeepQNetwork:
         self.gamma = reward_decay
         self.epsilon_max = e_greedy
         self.replace_target_iter = replace_target_iter
+        self.memory_size = memory_size
         self.rnn_train_length = rnn_train_length
         self.epsilon_increment = e_greedy_increment
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
@@ -37,6 +39,9 @@ class DeepQNetwork:
 
         # total learning step
         self.learn_step_counter = 0
+
+        # initialize zero memory [s, a, r, s_]
+        self.memory = pd.DataFrame(np.zeros((self.memory_size, n_features*2+2)))
 
         # consist of [target_net, evaluate_net]
         self._build_net()
@@ -53,6 +58,7 @@ class DeepQNetwork:
 
     def reset_data_record(self):
         self.single_game_history.clear()
+        self.memory_counter = 0
 
     def my_init(self,shape, name=None):
         value = np.random.random(shape)
@@ -65,6 +71,9 @@ class DeepQNetwork:
         for i in range(self.batch_size):
             X[i] = [tuple[0] for tuple in self.single_game_history[i:i+self.rnn_train_length]]
             X_[i] = [tuple[3] for tuple in self.single_game_history[i:i+self.rnn_train_length]]
+
+        # s = self.memory.iloc[self.rnn_train_length -1:,:self.n_features].values
+        # s_ = self.memory.iloc[self.rnn_train_length -1:,-self.n_features:].values
         return X,X
 
     def _build_keras_net(self):
@@ -89,6 +98,16 @@ class DeepQNetwork:
             self.evaluate_net.load_weights("learn_Weights.h5")
             self.target_net.load_weights("learn_Weights.h5")
 
+
+    def store_transition(self, s, a, r, s_):
+        if not hasattr(self, 'memory_counter'):
+            self.memory_counter = 0
+
+        transition = np.hstack((s, [a, r], s_))
+        # replace the old memory with new memory
+        index = self.memory_counter % self.memory_size
+        self.memory.iloc[index, :] = transition
+        self.memory_counter += 1
 
     def choose_action(self, observations):
         # to have batch dimension when feed into tf placeholder
@@ -120,8 +139,8 @@ class DeepQNetwork:
         q_target = q_eval.copy()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-        eval_act_index = np.asarray([i[1] for i in self.single_game_history[self.rnn_train_length-1:]] )
-        rewards =  np.asarray([i[2].value for i in self.single_game_history[self.rnn_train_length-1:]])
+        eval_act_index = np.asarray([i[1] for i in self.single_game_history[self.rnn_train_length-1:]] )  #self.memory.values[self.rnn_train_length-1:, self.n_features].astype(int)
+        rewards =  np.asarray([i[2].value for i in self.single_game_history[self.rnn_train_length-1:]])   # self.memory.values[self.rnn_train_length-1:, self.n_features + 1]
 
         q_target[batch_index, eval_act_index] = rewards + self.gamma * np.max(q_next, axis=1)
 

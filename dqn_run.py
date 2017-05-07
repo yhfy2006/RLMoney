@@ -7,8 +7,10 @@ from dqn_eval import Evaluator
 
 def run_network():
     step = 0
+    gameRun = 0
 
     for episode in range(9000):
+        gameRun += 1
         observation = env.reset()
 
         gameCicle = 0
@@ -30,8 +32,8 @@ def run_network():
             if done:
                 RL.learn_on_history()
                 net_stdev =evaluator.std_netvalues(env.net_values)
-                print("game:",episode,info['ticket'],info['net_value'],info['cash'],net_stdev,gameCicle," Start_point:",info['startPoint'])
-                evaluator.update(info['ticket'],info['net_value'],info['cash'],net_stdev,gameCicle,info['positions'],info['startPoint'])
+                print("game:",episode,info['net_value'],info['cash'],net_stdev,gameCicle,info['positions'])
+                evaluator.update(info['net_value'],info['cash'],net_stdev,gameCicle,info['positions'])
                 RL.memory_counter = 0
                 RL.reset_data_record()
                 break
@@ -48,8 +50,8 @@ if __name__ == "__main__":
     n_features =4
 
     rnn_train_length = 40
-
     train_batch_size = 20
+    memory_size = rnn_train_length + train_batch_size - 1
 
     RL = DeepQNetwork(n_actions, n_features,
                       learning_rate=0.03,
