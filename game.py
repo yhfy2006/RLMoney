@@ -172,7 +172,7 @@ class Game(object):
         #     companies = json.load(file)
         # self.companies = [company['Symbol'] for company in companies]  # store all the company symbols
 
-        self.companies = ['AAON']
+        self.companies = ['GOOG']
 
         self.game_length = game_length
         self.initial_cash = initial_cash
@@ -209,7 +209,7 @@ class Game(object):
         # randomly pick a start date, first day of the game
         # random.randint: Return a random integer N such that a <= N <= b.
         # start = random.randint(1, len(raw_data) - self.game_length)
-        start = 100
+        start = len(raw_data)-300
 
         # pre-allocate memory
         self.observations = np.zeros((self.game_length, 4), dtype=np.float64)
