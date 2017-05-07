@@ -10,11 +10,6 @@ import statistics
 class Evaluator(object):
 
     def __init__(self,deque_window=400,initial_cash = 10000,write_to_file=False,data_file = 'data/dataLog',print_data_log = True,log_all_netvalues = False):
-        self.net_values_list = []
-        self.net_stdev_list =[]
-        self.cash_list = []
-        self.game_cicles_list = []
-        self.postion_list = []
         self.q_netValue = deque(maxlen=deque_window)
         self.history_loss = []
         self.write_to_file = write_to_file
@@ -23,22 +18,32 @@ class Evaluator(object):
         self.log_all_netvalues = log_all_netvalues
         self.initial_cash =initial_cash
 
+        self.game_records = []
 
 
-    def update(self,net_value,net_stdev,cash,game_cicle,position):
+
+
+
+    def update(self,ticket,net_value,net_stdev,cash,game_cicle,position,start_point):
         if float(net_stdev) == 0:
             return
-        self.net_values_list.append(net_value)
-        self.net_stdev_list.append(net_stdev)
-        self.cash_list.append(cash)
-        self.game_cicles_list.append(game_cicle)
-        self.postion_list.append(position)
+        #         ticket net std cash game position start_point
+        record = [ticket,net_value,net_stdev,cash,game_cicle,position,start_point]
+        self.game_records.append(record)
+
         if self.write_to_file:
-            self.append_date_to_file(net_value,cash,game_cicle,position,net_stdev)
+            self.append_date_to_file(record)
+
+    def sortedByNetValue(self):
+        return sorted(self.game_records, key=lambda x: x[1])
 
     def sharpe_ratio(self):
-        return_value = [(i-self.initial_cash)/float(self.initial_cash) for i in self.net_values_list]
-        return_value_std = self.net_stdev_list
+
+        net_value_list = [i[1] for i in self.game_records]
+        net_stdev_list = [i[2] for i in self.game_records]
+
+        return_value = [(i-self.initial_cash)/float(self.initial_cash) for i in net_value_list]
+        return_value_std = net_stdev_list
         ratio = [return_value[i]/float(return_value_std[i]) for i in range(len(return_value))]
         return ratio
 
@@ -53,7 +58,7 @@ class Evaluator(object):
     def overall_avg(self):
         result = []
         cache = []
-        for net_value in self.net_values_list:
+        for net_value in self._net_value_list():
             # net_values is a list
             cache.append(net_value)
             result.append( sum(cache)/float(len(cache)) )
@@ -62,7 +67,7 @@ class Evaluator(object):
     def deque_avg(self):
         self.q_netValue.clear()
         result = []
-        for net_value in self.net_values_list:
+        for net_value in self._net_value_list():
             self.q_netValue.append(net_value)
             avg = sum(self.q_netValue)/float(len(self.q_netValue))
             result.append(avg)
@@ -71,7 +76,7 @@ class Evaluator(object):
     def deque_mid(self):
         self.q_netValue.clear()
         result = []
-        for net_value in self.net_values_list:
+        for net_value in self._net_value_list():
             self.q_netValue.append(net_value)
             avg = statistics.median(self.q_netValue)
             result.append(avg)
@@ -83,7 +88,7 @@ class Evaluator(object):
         discount = 0.99
         ema = []
         vals = []
-        for val in self.net_values_list:
+        for val in self._net_value_list():
             if val < 50000:
                     que_sum *= discount
                     que_sum += (1 - discount) * val
@@ -91,9 +96,14 @@ class Evaluator(object):
                     vals.append(val)
         return ema
 
-    def append_date_to_file(self,net_value,cash,game_cicle,position,net_std):
-        outStr = str(net_value)+","+str(cash)+","+str(game_cicle)+","+str(position)+","+str(net_std)
-        index = len(self.net_values_list)
+    def _net_value_list(self):
+        return  [i[1] for i in self.game_records]
+
+    def append_date_to_file(self,record):
+        #  record   ==> ticket net std cash game position start_point
+
+        outStr = record[0] + "," + str(record[1])+","+str(record[3])+","+str(record[4])+","+str(record[5])+ "," +str(record[2]) + "," + str(record[6])
+        index = len(self.game_records)
         if self.print_data:
             print(str(index)+"===>"+outStr)
         with open(self.data_file+".csv", 'a') as file:
@@ -110,13 +120,9 @@ class Evaluator(object):
 
 
     def _clear_data(self):
-        self.net_values_list.clear()
-        self.cash_list.clear()
-        self.game_cicles_list.clear()
-        self.postion_list.clear()
         self.q_netValue.clear()
         self.history_loss.clear()
-        self.net_stdev_list.clear()
+        self.game_records.clear()
 
 
     def load_from_data(self):
@@ -126,12 +132,18 @@ class Evaluator(object):
         with open(self.data_file+".csv") as fp:
             for line in fp:
                 values = line.split(",")
-                net_value = float(values[0])
-                cash = float(values[1])
-                game_cicle = float(values[2])
-                position = float(values[3])
-                net_std =float(values[4])
-                self.update(net_value,cash,game_cicle,position,net_std)
+                ticket = values[0]
+                net_value = float(values[1])
+                cash = float(values[2])
+                game_cicle = float(values[3])
+                position = float(values[4])
+                net_std =float(values[5])
+                start_point = int(values[6])
+
+                #record = [ticket, net_value, net_std, cash, game_cicle, position, start_point]
+
+                self.update(ticket, net_value, cash, net_std, game_cicle, position,
+                            start_point)
 
         self.write_to_file = temp_write_to_file
 

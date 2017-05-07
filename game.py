@@ -185,6 +185,10 @@ class Game(object):
         self.net_values = None
         self.pointer = 0
 
+        self._currentCompany = ''
+        self._startPoint = 0
+
+
         self.account = Account(self.initial_cash, self.transaction_fee)
 
     def render(self):
@@ -199,7 +203,9 @@ class Game(object):
         # choose a company and load the data
         raw_data = None
         while True:
-            company = random.choice(self.companies)  # randomly select a company
+            #company = random.choice(self.companies)  # randomly select a company
+            company = 'GOOG'
+            self._currentCompany = company
             with open('prices/{}.json'.format(company)) as file:
                 raw_data = json.load(file)  # read price data of this company
 
@@ -208,8 +214,11 @@ class Game(object):
 
         # randomly pick a start date, first day of the game
         # random.randint: Return a random integer N such that a <= N <= b.
-        # start = random.randint(1, len(raw_data) - self.game_length)
         start = len(raw_data)-300
+
+        #start = random.randint(1, len(raw_data) - self.game_length)
+        self._startPoint = start
+
 
         # pre-allocate memory
         self.observations = np.zeros((self.game_length, 4), dtype=np.float64)
@@ -223,7 +232,12 @@ class Game(object):
             record = raw_data[i + start]
             pre_close = float(raw_data[i + start - 1]['Adj_Close'])  # previous adjusted close
 
-            adjust = float(record['Adj_Close']) / float(record['Close'])  # coefficient to adjust prices
+
+            try:
+                #这一步还是会出exception
+                adjust = float(record['Adj_Close']) / float(record['Close'])  # coefficient to adjust prices
+            except:
+                continue
 
             raw_prices = np.array([float(record['Open']),
                                    float(record['High']),
@@ -282,7 +296,10 @@ class Game(object):
         info = {'cash': self.account.cash,
                 'positions': self.account.position_size,
                 'net_value': net_value,
-                'prices': (open_price, high_price, low_price, close_price)}
+                'prices': (open_price, high_price, low_price, close_price),
+                'ticket':self._currentCompany,
+                'startPoint':self._startPoint
+                }
 
         return new_observation, reward, done, info
 
